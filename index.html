@@ -294,14 +294,12 @@ body {
 
     // ---- Competitor rows ----
     const compRows = (D.marketData.competitors || []).map(c => {
-      const isYou = c.year === 2018 && c.trim === 'Long Range Battery' && c.distance === '6.91 mi' && c.allStar;
-      return { ...c, isYou };
+      return { ...c };
     });
 
-    // Sort: your row first, then high util, then others
+    // Sort: high util first, then others
     compRows.sort((a, b) => {
-      if (a.isYou) return -1;
-      if (b.isYou) return 1;
+
       const ord = { High: 0, Medium: 1, Low: 2 };
       return (ord[a.utilization] ?? 3) - (ord[b.utilization] ?? 3);
     });
@@ -422,7 +420,7 @@ body {
       const uCls = c.utilization.toLowerCase();
       h += `
         <tr class="${cls}">
-          <td>${c.year}${c.isYou ? ' <strong style="color:var(--blue)">(YOU)</strong>' : ''}</td>
+          <td>${c.year}</td>
           <td>${c.trim}${c.allStar ? '<span class="all-star">★ All-Star</span>' : ''}</td>
           <td>${c.rating.toFixed(2)}</td>
           <td>${c.trips}</td>
