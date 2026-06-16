@@ -154,6 +154,16 @@ body {
 .profit-total.pos .amount { color: var(--green); }
 .profit-total.neg .amount { color: var(--red); }
 
+/* Per-trip economics */
+.per-trip {
+  margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: var(--glass-2); border: 1px solid var(--glass-border);
+}
+.per-trip .pt-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-dim); margin-bottom: 8px; }
+.per-trip .pt-row { display: flex; justify-content: space-between; font-size: 0.78rem; padding: 3px 0; }
+.per-trip .pt-row .lbl { color: var(--text-dim); }
+.per-trip .pt-row .val { font-weight: 600; color: var(--text-bright); }
+
 /* Utilization Ring */
 .util-ring-wrap { display: flex; align-items: center; gap: 20px; }
 .util-ring {
@@ -182,6 +192,11 @@ body {
 }
 
 /* Action Items */
+.action-note {
+  font-size: 0.68rem; color: var(--amber); margin-bottom: 10px;
+  padding: 6px 10px; background: var(--amber-bg); border-radius: 8px;
+  border: 1px solid rgba(255,183,77,0.15);
+}
 .action-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 10px; border-radius: 10px; background: var(--glass-2); margin-bottom: 6px;
@@ -223,11 +238,10 @@ body {
 .comp-table tr.high-util { background: rgba(0,230,118,0.05); }
 .comp-table tr.you-row { background: rgba(68,138,255,0.08); border-left: 3px solid var(--blue); }
 .all-star { display: inline-block; font-size: 0.58rem; padding: 1px 5px; border-radius: 10px; background: var(--purple-bg); color: var(--purple); font-weight: 600; margin-left: 3px; }
-.util-tag { font-size: 0.6rem; padding: 1px 5px; border-radius: 8px; font-weight: 600; }
+.util-tag { font-size: 0.6rem; padding: 1px 5px; border-radius: 8px; font-weight: 600; position: relative; cursor: help; }
 .util-tag.high { color: var(--green); }
 .util-tag.medium { color: var(--amber); }
 .util-tag.low { color: var(--text-dim); }
-.util-tag { position: relative; cursor: help; }
 .util-tag:hover::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -252,6 +266,7 @@ body {
 }
 .price-comp-box.at-market { background: var(--glass-2); border: 1px solid var(--glass-border); }
 .price-comp-box.below { background: var(--red-bg); border: 1px solid rgba(255,82,82,0.15); }
+.price-comp-box.above { background: var(--green-bg); border: 1px solid rgba(0,230,118,0.15); }
 .price-comp-box .title { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; }
 .price-comp-box .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; font-size: 0.76rem; }
 .price-comp-box .row .you { color: var(--text-bright); font-weight: 600; }
@@ -259,6 +274,7 @@ body {
 .price-comp-box .gap { font-size: 0.68rem; margin-top: 4px; }
 .price-comp-box.below .gap { color: var(--red); }
 .price-comp-box.at-market .gap { color: var(--green); }
+.price-comp-box.above .gap { color: var(--green); }
 
 /* Santa Fe alert */
 .santa-fe-alert {
@@ -267,6 +283,12 @@ body {
 }
 .santa-fe-alert .big { font-size: 1rem; font-weight: 700; color: var(--green); }
 .santa-fe-alert .sub { font-size: 0.78rem; color: var(--text); margin-top: 4px; }
+.santa-fe-info {
+  background: var(--glass-2); border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 14px; text-align: center; margin-top: 12px;
+}
+.santa-fe-info .big { font-size: 0.92rem; font-weight: 700; color: var(--text-bright); }
+.santa-fe-info .sub { font-size: 0.78rem; color: var(--text-dim); margin-top: 4px; }
 
 /* History */
 .history-note { font-size: 0.8rem; color: var(--text-dim); text-align: center; padding: 16px 0; }
@@ -300,23 +322,26 @@ body {
     const updated = new Date(D.lastUpdated);
     const updatedStr = updated.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
 
-    // ---- Profit calc ----
-    const trips = D.performance.completedTrips.value;
+    // ========== FIX 1: Profit Calculator (from costs object) ==========
+    const monthOfYear = updated.getMonth() + 1; // 1-12
     const gross = D.earnings.totalEarned;
-    const turoFee = gross * (D.earnings.estimatedTuroFeePercent / 100);
-    const insurance = D.earnings.insuranceMonthly / D.insurance.vehiclesCovered;
-    const charging = D.earnings.estimatedChargingPerTrip * trips;
-    const cleaning = D.earnings.estimatedCleaningPerTrip * trips;
-    const netProfit = gross - turoFee - insurance - charging - cleaning;
+    const trips = D.performance.completedTrips.value;
+    const costs = D.costs;
+
+    const turoFees = gross * (costs.turoFeePercent / 100);
+    const insuranceYTD = costs.insuranceMonthly * monthOfYear;
+    const cleaningYTD = costs.cleaningMonthlyPerCar * costs.vehiclesCovered * monthOfYear;
+    const totalCosts = turoFees + insuranceYTD + cleaningYTD;
+    const netProfit = gross - totalCosts;
+
+    // Per-trip economics
+    const revenuePerTrip = trips > 0 ? gross / trips : 0;
+    const turoFeePerTrip = revenuePerTrip * (costs.turoFeePercent / 100);
+    const netPerTrip = revenuePerTrip - turoFeePerTrip;
 
     // ---- Competitor rows ----
-    const compRows = (D.marketData.competitors || []).map(c => {
-      return { ...c };
-    });
-
-    // Sort: high util first, then others
+    const compRows = (D.marketData.competitors || []).map(c => ({ ...c }));
     compRows.sort((a, b) => {
-
       const ord = { High: 0, Medium: 1, Low: 2 };
       return (ord[a.utilization] ?? 3) - (ord[b.utilization] ?? 3);
     });
@@ -330,6 +355,24 @@ body {
     // ---- Action items sort ----
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     const actions = [...(D.actionItems || [])].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+    // ========== FIX 4: Santa Fe alert (data-driven) ==========
+    const santaFe = D.fleet.find(v => v.id === 'santa-fe') || D.fleet[1];
+    const showSantaFeAlert = santaFe && !santaFe.listingComplete;
+    const santaFeCompCount = D.santaFeMarket ? D.santaFeMarket.competitorCount : 0;
+
+    // ========== FIX 2: Price comparison (from marketData) ==========
+    const md = D.marketData;
+    const weekdayGap = Math.round((1 - md.yourCalendarWeekdayAvg / md.areaWeekdayMedian) * 100);
+    const weekendGap = Math.round((1 - md.yourCalendarWeekendAvg / md.areaWeekendMedian) * 100);
+
+    function gapLabel(gap) {
+      if (gap <= 5 && gap >= -5) return { text: '✅ At market', cls: 'at-market' };
+      if (gap > 5) return { text: '🔻 ' + gap + '% below market', cls: 'below' };
+      return { text: '🔺 ' + Math.abs(gap) + '% above market', cls: 'above' };
+    }
+    const weekdayInfo = gapLabel(weekdayGap);
+    const weekendInfo = gapLabel(weekendGap);
 
     // ---- Build HTML ----
     let h = '<div class="container">';
@@ -370,19 +413,24 @@ body {
     });
     h += `</div>`;
 
-    // Profit Calculator
+    // ========== FIX 1: Profit Calculator ==========
     const netClass = netProfit >= 0 ? 'pos' : 'neg';
     h += `
       <div class="card">
-        <div class="card-title">🧮 Profit Calculator — Tesla Model 3</div>
+        <div class="card-title">🧮 Profit Calculator — YTD ${updated.getFullYear()}</div>
         <div class="profit-line"><span class="label">Gross Earnings</span><span class="amount pos">+ ${fmt(gross)}</span></div>
-        <div class="profit-line"><span class="label">Turo Fees (${D.earnings.estimatedTuroFeePercent}%)</span><span class="amount neg">− ${fmt(turoFee)}</span></div>
-        <div class="profit-line"><span class="label">Insurance ($${D.earnings.insuranceMonthly}/mo ÷ ${D.insurance.vehiclesCovered} vehicles)</span><span class="amount neg">− ${fmt(insurance)}</span></div>
-        <div class="profit-line"><span class="label">Charging ($${D.earnings.estimatedChargingPerTrip} × ${trips} trips)</span><span class="amount neg">− ${fmt(charging)}</span></div>
-        <div class="profit-line"><span class="label">Cleaning ($${D.earnings.estimatedCleaningPerTrip} × ${trips} trips)</span><span class="amount neg">− ${fmt(cleaning)}</span></div>
+        <div class="profit-line"><span class="label">Turo Fees (${costs.turoFeePercent}%)</span><span class="amount neg">− ${fmt(turoFees)}</span></div>
+        <div class="profit-line"><span class="label">Insurance (${fmt0(costs.insuranceMonthly)}/mo × ${monthOfYear} months)</span><span class="amount neg">− ${fmt(insuranceYTD)}</span></div>
+        <div class="profit-line"><span class="label">Cleaning (${fmt0(costs.cleaningMonthlyPerCar)}/mo × ${costs.vehiclesCovered} cars × ${monthOfYear} months)</span><span class="amount neg">− ${fmt(cleaningYTD)}</span></div>
         <div class="profit-total ${netClass}">
-          <span class="label">Net Profit</span>
+          <span class="label">Net Profit (YTD)</span>
           <span class="amount">${netProfit >= 0 ? '+' : ''}${fmt(netProfit)}</span>
+        </div>
+        <div class="per-trip">
+          <div class="pt-title">Per-Trip Economics (${trips} trips)</div>
+          <div class="pt-row"><span class="lbl">Revenue per trip</span><span class="val">${fmt(revenuePerTrip)}</span></div>
+          <div class="pt-row"><span class="lbl">Turo fee per trip (${costs.turoFeePercent}%)</span><span class="val" style="color:var(--red)">− ${fmt(turoFeePerTrip)}</span></div>
+          <div class="pt-row"><span class="lbl">Net per trip (before overhead)</span><span class="val" style="color:var(--green)">${fmt(netPerTrip)}</span></div>
         </div>
       </div>`;
 
@@ -406,8 +454,9 @@ body {
         </div>
       </div>`;
 
-    // Action Items
+    // ========== FIX 3: Action Items with manual note ==========
     h += `<div class="card"><div class="card-title">🎯 Action Items</div>`;
+    h += `<div class="action-note">⚠️ Manually maintained — updates when you tell Jarvis</div>`;
     actions.forEach(a => {
       h += `
         <div class="action-item">
@@ -419,13 +468,12 @@ body {
     h += `</div>`;
 
     // Market Data — Competitor Section
-    const md = D.marketData;
     h += `
       <div class="card">
         <div class="card-title">🏪 Market Data</div>
         <div class="market-header">Tesla Model 3 in Las Vegas (10mi radius)</div>
         <div class="market-sub">Source: Turo Insights — ${md.sampleSize} cars, ${md.sampleMonth}</div>
-        <div class="market-sub" style="font-size:0.58rem;color:var(--text-mute);margin-top:2px">Utilization ranges (estimated): Low <30% · Medium 30-50% · High 50%+. Turo does not publish exact thresholds.</div>
+        <div class="market-sub" style="font-size:0.58rem;color:var(--text-mute);margin-top:2px">Utilization ranges (estimated): Low &lt;30% · Medium 30-50% · High 50%+. Turo does not publish exact thresholds.</div>
         <div class="market-summary">
           <div class="market-stat"><div class="lbl">Weekend Median</div><div class="val">${fmt0(md.areaWeekendMedian)}</div></div>
           <div class="market-stat"><div class="lbl">Weekday Median</div><div class="val">${fmt0(md.areaWeekdayMedian)}</div></div>
@@ -457,29 +505,39 @@ body {
     });
     h += `</tbody></table></div>`;
 
-    // Price comparison callout
-    const wkndGap = Math.round((1 - 54 / md.areaWeekendMedian) * 100);
+    // ========== FIX 2: Price comparison callout (dynamic) ==========
     h += `
       <div class="price-callout">
-        <div class="price-comp-box at-market">
+        <div class="price-comp-box ${weekdayInfo.cls}">
           <div class="title">Weekday</div>
-          <div class="row"><span class="you">You: ${fmt0(53)}</span><span class="area">Area: ${fmt0(md.areaWeekdayMedian)}</span></div>
-          <div class="gap">✅ At market</div>
+          <div class="row"><span class="you">You: ${fmt0(md.yourCalendarWeekdayAvg)}</span><span class="area">Area: ${fmt0(md.areaWeekdayMedian)}</span></div>
+          <div class="gap">${weekdayInfo.text}</div>
         </div>
-        <div class="price-comp-box below">
+        <div class="price-comp-box ${weekendInfo.cls}">
           <div class="title">Weekend</div>
-          <div class="row"><span class="you">You: ${fmt0(54)}</span><span class="area">Area: ${fmt0(md.areaWeekendMedian)}</span></div>
-          <div class="gap">🔻 ${Math.abs(wkndGap)}% below market</div>
+          <div class="row"><span class="you">You: ${fmt0(md.yourCalendarWeekendAvg)}</span><span class="area">Area: ${fmt0(md.areaWeekendMedian)}</span></div>
+          <div class="gap">${weekendInfo.text}</div>
         </div>
       </div>`;
 
-    // Santa Fe alert
-    h += `
-      <div class="santa-fe-alert">
-        <div class="big">🚀 ZERO competitors for Hyundai Santa Fe in Las Vegas</div>
-        <div class="sub">First-mover advantage — <strong>$1,400+/mo</strong> potential revenue while unlisted</div>
-      </div>
-    </div>`;
+    // ========== FIX 4: Santa Fe alert (data-driven) ==========
+    if (showSantaFeAlert) {
+      if (santaFeCompCount === 0) {
+        h += `
+          <div class="santa-fe-alert">
+            <div class="big">🚀 ZERO competitors for Hyundai Santa Fe in Las Vegas</div>
+            <div class="sub">First-mover advantage — <strong>$1,400+/mo</strong> potential revenue while unlisted</div>
+          </div>`;
+      } else {
+        h += `
+          <div class="santa-fe-info">
+            <div class="big">📊 ${santaFeCompCount} competitor${santaFeCompCount !== 1 ? 's' : ''} for Santa Fe in Las Vegas</div>
+            <div class="sub">Finish listing to capture market share</div>
+          </div>`;
+      }
+    }
+
+    h += `</div>`;
 
     // Calendar
     h += `
@@ -529,7 +587,6 @@ body {
       h += `<div class="history-note">📝 Started tracking <strong>June 16, 2026</strong><br>Earnings data will accumulate here as cron jobs add daily snapshots.</div>`;
     }
     h += `<div class="history-chart" id="historyChart"></div>`;
-    // Hidden template for future chart
     if ((D.history || []).length > 1) {
       h += `<div id="chartContainer" style="margin-top:12px;">`;
       const maxEarn = Math.max(...D.history.map(p => p.totalEarned));
@@ -545,12 +602,12 @@ body {
     }
     h += `</div>`;
 
-    // Footer
+    // ========== FIX 5: Insurance footer (from costs object) ==========
     h += `
       <div class="footer">
-        <div class="ins">🛡️ ${D.insurance.provider} — ${D.insurance.coverage}</div>
-        <div class="ins-detail">${fmt0(D.insurance.monthlyCost)}/mo · ${D.insurance.vehiclesCovered} vehicles · ${D.insurance.policyStart} → ${D.insurance.policyEnd}</div>
-        <div class="updated">Next All-Star assessment: ${D.host.nextAssessment} · Lightning Fleet Dashboard v2</div>
+        <div class="ins">🛡️ Insurance — ${fmt0(costs.insuranceMonthly)}/mo · ${costs.vehiclesCovered} vehicles covered</div>
+        <div class="ins-detail">Policy: ${costs.policyStart} → ${costs.policyEnd}</div>
+        <div class="updated">Next All-Star assessment: ${D.host.nextAssessment} · Lightning Fleet Dashboard v3</div>
       </div>`;
 
     h += '</div>'; // container
