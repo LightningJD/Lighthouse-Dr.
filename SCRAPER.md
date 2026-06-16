@@ -1,63 +1,54 @@
 # Lightning Fleet Dashboard — Scraper Instructions
 
-## What This Does
-This is a cron job that runs every 12 hours. It scrapes Turo fleet data and competitor pricing, updates `data.json`, commits, and pushes to GitHub Pages.
+## Cron Job
+- **ID:** 39745336-9c4d-4b95-a25b-3daefe417dd0
+- **Schedule:** Every 12 hours
+- **Model:** zai/glm-5.2 (fallbacks: xiaomi/mimo-v2.5, zai/glm-5.1)
+- **Session:** Isolated
 
-## Scraping Steps
+## What Gets Scraped (all from logged-in Turo host account)
 
-### 1. Start Browser
+| Data | Source URL | Repeatable | Method |
+|---|---|---|---|
+| Calendar prices | /trips/calendar | ✅ | Extract price buttons via JS evaluate |
+| Market data + competitors | /trips/calendar → Insights button | ✅ | Click Insights, extract sample cars |
+| Earnings | /business/earnings | ✅ | Extract page text |
+| Performance | /business/performance | ✅ | Extract page text |
+| Trips | /trips/booked | ✅ | Extract page text |
+| Vehicle status | /listings (Vehicles page) | ✅ | Extract listing status per vehicle |
+| Santa Fe competitors | Search page | ✅ | Count results for Hyundai Santa Fe in LV |
+
+## What Does NOT Get Scraped (manually maintained)
+
+| Data | Why | How to update |
+|---|---|---|
+| Action items | Manually curated priorities | Edit data.json directly or tell Jarvis |
+| Costs (insurance, cleaning, Turo fee) | Static config, rarely changes | Edit data.json costs object |
+
+## Data Structure (data.json)
+
 ```
-browser action=start (profile: openclaw — has saved Turo session)
-```
-
-### 2. Scrape Fleet Calendar
-- Navigate to `https://turo.com/us/en/trips/calendar`
-- Extract daily prices for the Tesla Model 3 (PHL46) for the next 2-3 weeks
-- Note any booked dates
-
-### 3. Scrape Earnings
-- Navigate to `https://turo.com/us/en/business/earnings`
-- Extract: total earned, upcoming earnings, reimbursements, incentives, missed earnings
-
-### 4. Scrape Performance
-- Navigate to `https://turo.com/us/en/business/performance`
-- Extract: cancellation rate, 5-star rate, maintenance rate, cleanliness rate, completed trips
-
-### 5. Scrape Trips
-- Navigate to `https://turo.com/us/en/trips/booked`
-- Extract all booked trips: guest name, vehicle, dates, location, status
-
-### 6. Scrape Competitor Pricing — Tesla Model 3
-- Navigate to `https://turo.com/us/en/search?location=Las%20Vegas%2C%20NV&make=Tesla&model=Model%203`
-- Extract all listings: year, rating, trips count, price per day, distance, all-star status
-
-### 7. Scrape Competitor Pricing — Hyundai Santa Fe
-- Navigate to `https://turo.com/us/en/search?location=Las%20Vegas%2C%20NV&make=Hyundai&model=Santa%20Fe`
-- Extract all listings (if any)
-
-### 8. Update Data
-- Write updated JSON to `fleet-dashboard/data.json`
-- Preserve the same JSON structure
-- Set `lastUpdated` to current ISO timestamp
-
-### 9. Push to GitHub
-```bash
-cd ~/.openclaw/workspace/fleet-dashboard
-git add data.json
-git commit -m "Auto-update: $(date -u +%Y-%m-%d-%H:%M) UTC"
-git push origin main
+host: { name, tier, nextAssessment }
+fleet: [{ id, make, model, year, licensePlate, status, details, listingComplete, utilization, utilizationLabel, yourMedianPrice }]
+earnings: { totalEarned, upcoming, reimbursements, incentives, missedEarnings, currency }
+costs: { turoFeePercent, insuranceMonthly, cleaningMonthlyPerCar, chargingSkipped, vehiclesCovered, policyStart, policyEnd }
+performance: { cancellationRate, fiveStarRate, maintenance, cleanliness, completedTrips }
+calendar: { averagePrice, days: [{ date, day, price, weekend? }] }
+trips: [{ id, guest, vehicle, endDate, endTime, location, status }]
+marketData: { source, sampleMonth, sampleSize, areaWeekendMedian, areaWeekdayMedian, yourMedianPrice, yourUtilization, yourCalendarWeekendAvg, yourCalendarWeekdayAvg, competitors: [...] }
+santaFeMarket: { competitorCount, note }
+actionItems: [{ priority, item, status }]
+actionItemsNote: "Manually maintained"
+history: [{ date, totalEarned, upcoming, completedTrips, utilization }]
 ```
 
-### 10. Stop Browser
-```
-browser action=stop
-```
+## Turo Session
+- Login cookies persist in the openclaw browser profile at `~/.openclaw/browser/openclaw/user-data`
+- If session expires (redirects to login), the cron will notify Jordyn to re-login
+- Re-login: start browser, navigate to turo.com/login, Jordyn logs in manually
 
-## Data Structure
-See `fleet-dashboard/data.json` for the exact structure to maintain.
-
-## Important Notes
-- The openclaw browser profile has saved Turo login cookies — no re-login needed
-- If Turo session expired (redirects to login page), notify Jordyn
-- Use `evaluate` JS for fast data extraction instead of snapshot when possible
-- Keep scraping quick — don't linger on pages
+## Utilization Labels (estimated, not from Turo)
+- **Low:** <30% (~less than 9 booked days/month)
+- **Medium:** 30-50% (~9-15 booked days/month)  
+- **High:** 50%+ (~15+ booked days/month)
+- Turo does not publish exact percentage thresholds
