@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Snapshot</title>
+  <style>
+    body{margin:0;background:#070b14;color:#edf3ff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}.wrap{max-width:980px;margin:0 auto;padding:18px}.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px;margin:12px 0}.muted{color:#8c98ad}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.metric{background:rgba(255,255,255,.08);border-radius:12px;padding:12px}.v{font-size:1.4rem;font-weight:800}.ok{color:#00e676}.warn{color:#ffb74d}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}a{color:#5c9dff}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Market Snapshot</h1>
+    <p class="muted">Validated market research entries used by the pricing report.</p>
+    <div id="app">Loading…</div>
+    <p><a href="intelligence.html">Back to Intelligence Dashboard</a></p>
+  </main>
+  <script>
+    const money=n=>Number.isFinite(n)?'$'+Math.round(n):'—';
+    const dt=s=>s?new Date(s).toLocaleString():'—';
+    const median=a=>{const n=a.filter(Number.isFinite).sort((x,y)=>x-y);if(!n.length)return null;const m=Math.floor(n.length/2);return n.length%2?n[m]:(n[m-1]+n[m])/2};
+    fetch('market-snapshots.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+      const seg=d.segments?.[0]||{}; const rows=seg.listings||[]; const prices=rows.map(x=>x.currentPrice); const med=median(prices);
+      document.getElementById('app').innerHTML=`
+        <section class="card"><div class="grid">
+          <div class="metric"><div class="muted">Status</div><div class="v ${d.collector?.status==='ok'?'ok':'warn'}">${d.collector?.status||'unknown'}</div></div>
+          <div class="metric"><div class="muted">Generated</div><div class="v">${dt(d.generatedAt)}</div></div>
+          <div class="metric"><div class="muted">Listings</div><div class="v">${d.collector?.successfulListings||0}/${d.collector?.totalListings||0}</div></div>
+          <div class="metric"><div class="muted">Median Price</div><div class="v">${money(med)}</div></div>
+        </div><p class="muted">${d.collector?.message||''}</p></section>
+        <section class="card"><h2>${seg.label||'Segment'}</h2><table><thead><tr><th>Title</th><th>Year</th><th>Price</th><th>Trips</th><th>Rating</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.title||'—'}</td><td>${x.year||'—'}</td><td>${money(x.currentPrice)}</td><td>${x.tripCount??'—'}</td><td>${x.rating??'—'}</td></tr>`).join('')}</tbody></table></section>`;
+    }).catch(e=>{document.getElementById('app').textContent='Could not load market snapshot: '+e.message});
+  </script>
+</body>
+</html>
