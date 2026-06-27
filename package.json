@@ -7,7 +7,8 @@
   "scripts": {
     "serve": "python3 -m http.server 5173",
     "validate": "node scripts/validate-data.mjs",
-    "analyze": "node scripts/pricing-engine.mjs"
+    "analyze": "node scripts/pricing-engine.mjs",
+    "check": "npm run validate && npm run analyze && node scripts/check-app.mjs"
   },
   "engines": {
     "node": ">=18"
