@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-06-27T20:30:00.000Z",
+  "collector": {
+    "mode": "manual_seeded_public_listing_urls",
+    "status": "not_run_yet",
+    "message": "Run npm run collect:market to collect fresh public listing snapshots."
+  },
+  "segments": []
+}
