@@ -1,2 +1,8 @@
 .token-local
 turo-extension/
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+intelligence-report.json
