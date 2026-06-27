@@ -23,8 +23,8 @@ jobs:
       - name: Run full app check and regenerate report
         run: npm run check
 
-      - name: Commit updated intelligence report
+      - name: Commit updated market intelligence files
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Refresh market intelligence report'
-          file_pattern: intelligence-report.json
+          file_pattern: intelligence-report.json market-snapshots.json
