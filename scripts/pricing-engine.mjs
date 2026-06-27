@@ -1,7 +1,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 const data = JSON.parse(await readFile(new URL('../data.json', import.meta.url), 'utf8'));
+let eventsData = { events: [] };
+try {
+  eventsData = JSON.parse(await readFile(new URL('../events.json', import.meta.url), 'utf8'));
+} catch {
+  eventsData = { events: [] };
+}
 
+const now = new Date();
 const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: data.earnings?.currency || 'USD',
@@ -24,6 +31,24 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function daysUntil(dateString) {
+  const target = new Date(`${dateString}T00:00:00`);
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
+function getRelevantEvents() {
+  return (eventsData.events || [])
+    .map(event => ({ ...event, daysUntil: daysUntil(event.startsOn) }))
+    .filter(event => event.daysUntil >= -3 && event.daysUntil <= 45)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
+function getActiveEventMultiplier() {
+  const upcoming = getRelevantEvents();
+  const hot = upcoming.find(event => event.daysUntil >= 0 && event.daysUntil <= 14 && event.demandScore >= 8);
+  return hot ? hot.recommendedMultiplier || 1 : 1;
+}
+
 function recommendPrice({ current, marketMedian, utilization, eventMultiplier = 1 }) {
   if (!Number.isFinite(current) || current <= 0 || !Number.isFinite(marketMedian) || marketMedian <= 0) {
     return null;
@@ -40,12 +65,13 @@ function recommendPrice({ current, marketMedian, utilization, eventMultiplier = 
   }
 
   target *= eventMultiplier;
-  return Math.round(clamp(target, current * 0.85, current * 1.35));
+  return Math.round(clamp(target, current * 0.85, current * 1.5));
 }
 
 function analyzeMarketData() {
   const md = data.marketData || {};
   const competitors = md.competitors || [];
+  const eventMultiplier = getActiveEventMultiplier();
 
   const competitorWeekendMedian = median(competitors.map(c => c.weekendPrice));
   const competitorWeekdayMedian = median(competitors.map(c => c.weekdayPrice));
@@ -60,14 +86,15 @@ function analyzeMarketData() {
   const weekendGap = pctGap(currentWeekend, weekendMarket);
   const weekdayGap = pctGap(currentWeekday, weekdayMarket);
 
-  const suggestedWeekend = recommendPrice({ current: currentWeekend, marketMedian: weekendMarket, utilization });
-  const suggestedWeekday = recommendPrice({ current: currentWeekday, marketMedian: weekdayMarket, utilization });
+  const suggestedWeekend = recommendPrice({ current: currentWeekend, marketMedian: weekendMarket, utilization, eventMultiplier });
+  const suggestedWeekday = recommendPrice({ current: currentWeekday, marketMedian: weekdayMarket, utilization, eventMultiplier: eventMultiplier > 1 ? Math.min(eventMultiplier, 1.25) : 1 });
 
   return {
     segment: 'Tesla Model 3 Las Vegas',
     sampleMonth: md.sampleMonth,
     sampleSize: md.sampleSize,
     caveat: md.dataLagWarning || 'Market numbers may lag or be manually maintained.',
+    eventMultiplier,
     current: {
       weekday: currentWeekday,
       weekend: currentWeekend,
@@ -86,17 +113,21 @@ function analyzeMarketData() {
     recommendations: {
       suggestedWeekday,
       suggestedWeekend,
-      summary: buildPricingSummary({ weekdayGap, weekendGap, suggestedWeekday, suggestedWeekend, currentWeekday, currentWeekend })
+      summary: buildPricingSummary({ weekdayGap, weekendGap, suggestedWeekday, suggestedWeekend, currentWeekday, currentWeekend, eventMultiplier })
     }
   };
 }
 
-function buildPricingSummary({ weekdayGap, weekendGap, suggestedWeekday, suggestedWeekend, currentWeekday, currentWeekend }) {
+function buildPricingSummary({ weekdayGap, weekendGap, suggestedWeekday, suggestedWeekend, currentWeekday, currentWeekend, eventMultiplier }) {
   const notes = [];
+  if (eventMultiplier > 1) {
+    notes.push(`Upcoming demand event detected. Pricing multiplier applied: ${eventMultiplier}x.`);
+  }
+
   if (weekdayGap !== null && weekdayGap > 5) {
     notes.push(`Weekday listing price is about ${weekdayGap}% below market; test ${currency.format(suggestedWeekday)}.`);
   } else if (weekdayGap !== null && weekdayGap < -5) {
-    notes.push(`Weekday listing price is above market; hold only if bookings stay strong.`);
+    notes.push('Weekday listing price is above market; hold only if bookings stay strong.');
   } else {
     notes.push('Weekday listing price is close to market.');
   }
@@ -171,7 +202,16 @@ function analyzeFleetProfit() {
   };
 }
 
-function buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis) {
+function analyzeEvents() {
+  const upcoming = getRelevantEvents();
+  return {
+    market: eventsData.market || 'Las Vegas, NV',
+    next45Days: upcoming,
+    highestDemandEvent: upcoming.slice().sort((a, b) => (b.demandScore || 0) - (a.demandScore || 0))[0] || null
+  };
+}
+
+function buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis, eventAnalysis) {
   const actions = [];
   const rec = marketAnalysis.recommendations;
 
@@ -189,6 +229,16 @@ function buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis) {
       action: `Test weekday Tesla Model 3 price at ${currency.format(rec.suggestedWeekday)}.`,
       reason: `Current weekday price ${currency.format(marketAnalysis.current.weekday)} vs market median ${currency.format(marketAnalysis.market.weekdayMedian)}.`
     });
+  }
+
+  for (const event of eventAnalysis.next45Days || []) {
+    if (event.daysUntil >= 0 && event.daysUntil <= 30 && event.demandScore >= 8) {
+      actions.push({
+        priority: 'high',
+        action: `Prepare event pricing for ${event.name}.`,
+        reason: `${event.name} starts in ${event.daysUntil} day(s), demand score ${event.demandScore}/10, suggested multiplier ${event.recommendedMultiplier}x.`
+      });
+    }
   }
 
   const incompleteVehicles = (data.fleet || []).filter(v => !v.listingComplete);
@@ -211,18 +261,38 @@ function buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis) {
   return actions;
 }
 
+function buildAlerts(actionPlan) {
+  return actionPlan.map((item, index) => ({
+    id: `alert-${index + 1}`,
+    priority: item.priority,
+    title: item.action,
+    body: item.reason,
+    status: 'open',
+    generatedAt: now.toISOString()
+  }));
+}
+
 const marketAnalysis = analyzeMarketData();
 const liveAnalysis = analyzeLiveCompetitors();
 const profitAnalysis = analyzeFleetProfit();
-const actionPlan = buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis);
+const eventAnalysis = analyzeEvents();
+const actionPlan = buildActionPlan(marketAnalysis, liveAnalysis, profitAnalysis, eventAnalysis);
+const alerts = buildAlerts(actionPlan);
 
 const report = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: now.toISOString(),
   sourceLastUpdated: data.lastUpdated,
   marketAnalysis,
   liveAnalysis,
   profitAnalysis,
+  eventAnalysis,
   actionPlan,
+  alerts,
+  dashboardStatus: {
+    refreshCadence: 'Every 6 hours via GitHub Actions when workflow is enabled',
+    dataFreshness: 'data.json and events.json are the current source of truth until live/authorized integrations are added',
+    nextUpgrade: 'Connect Supabase and authorized data imports'
+  },
   nextDataToCollect: [
     'Actual booked daily rates by trip',
     'Lead time from booking date to trip start',
