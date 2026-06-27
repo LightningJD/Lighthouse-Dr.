@@ -1,0 +1,139 @@
+{
+  "productName": "Lightning Fleet Intelligence",
+  "northStar": "AI operating system for a rental fleet business, focused on recommendations not just dashboards.",
+  "dailyQuestions": [
+    "What should I charge today?",
+    "What vehicle should I buy next?",
+    "Where is demand increasing or falling?",
+    "Which competitors are outperforming me, and why?",
+    "What actions will make me the most money today?"
+  ],
+  "engines": [
+    {
+      "id": "market_observation_engine",
+      "name": "Market Observation Engine",
+      "goal": "Collect permitted market observations for listings, prices, ratings, trips, delivery options, and supply changes.",
+      "currentStatus": "partial",
+      "currentFiles": ["market-sources.json", "market-snapshots.json", "scripts/collect-market.mjs", "scripts/validate-market-snapshots.mjs"],
+      "nextMilestones": [
+        "Store every observation historically instead of only latest snapshot.",
+        "Add make/model/category market segmentation.",
+        "Track new and removed competitor listings.",
+        "Add source confidence and source age scoring."
+      ]
+    },
+    {
+      "id": "calendar_intelligence_engine",
+      "name": "Calendar Intelligence Engine",
+      "goal": "Infer competitor utilization from recurring visible availability snapshots where permitted.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Create competitor-calendar-snapshots.json.",
+        "Create scripts/collect-calendar-availability.mjs.",
+        "Create scripts/validate-calendar-snapshots.mjs.",
+        "Create scripts/infer-utilization.mjs.",
+        "Merge utilization into intelligence-report.json and dashboards."
+      ],
+      "guardrails": [
+        "No login automation.",
+        "No private APIs.",
+        "No bypassing protections.",
+        "Unknown-heavy snapshots must be low confidence."
+      ]
+    },
+    {
+      "id": "pricing_intelligence_engine",
+      "name": "Pricing Intelligence Engine",
+      "goal": "Recommend weekday, weekend, event, and last-minute pricing using market, utilization, event, and cost data.",
+      "currentStatus": "partial",
+      "currentFiles": ["scripts/pricing-engine.mjs", "scripts/merge-market-snapshots.mjs", "intelligence-report.json"],
+      "nextMilestones": [
+        "Use inferred competitor utilization.",
+        "Add break-even rate by vehicle.",
+        "Add confidence scoring.",
+        "Add price change tracking over time."
+      ]
+    },
+    {
+      "id": "demand_forecasting_engine",
+      "name": "Demand Forecasting Engine",
+      "goal": "Predict demand using events, seasonality, historical utilization, supply, and booking lead time.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Create demand-score model.",
+        "Use Vegas events and holidays.",
+        "Add 7/14/30 day demand forecast.",
+        "Connect forecast to pricing recommendations."
+      ]
+    },
+    {
+      "id": "fleet_acquisition_engine",
+      "name": "Fleet Acquisition Engine",
+      "goal": "Rank what vehicle to buy next by expected ROI, utilization, payback, risk, competition, and market shortage.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Create vehicle acquisition candidates schema.",
+        "Add ROI/payback formulas.",
+        "Add oversupply and shortage detection.",
+        "Add buy/wait/avoid recommendations."
+      ]
+    },
+    {
+      "id": "competitor_intelligence_engine",
+      "name": "Competitor Intelligence Engine",
+      "goal": "Track competitor hosts, price changes, listing changes, utilization patterns, and review/trip velocity.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Create competitor identity model.",
+        "Track price deltas.",
+        "Track listing status changes.",
+        "Rank high-performing competitors."
+      ]
+    },
+    {
+      "id": "geographic_intelligence_engine",
+      "name": "Geographic Intelligence Engine",
+      "goal": "Compare demand and pricing by Las Vegas submarket instead of treating the whole city as one market.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Add geographic zones.",
+        "Support LAS airport, Strip, Downtown, Henderson, Summerlin, North Las Vegas.",
+        "Track zone-level pricing and utilization."
+      ]
+    },
+    {
+      "id": "operations_intelligence_engine",
+      "name": "Operations Intelligence Engine",
+      "goal": "Turn market and fleet data into daily action items.",
+      "currentStatus": "partial",
+      "currentFiles": ["scripts/pricing-engine.mjs", "intelligence-report.json", "intelligence.html"],
+      "nextMilestones": [
+        "Prioritize actions by expected profit impact.",
+        "Add listing improvement recommendations.",
+        "Add maintenance timing recommendations.",
+        "Add event prep checklist."
+      ]
+    },
+    {
+      "id": "executive_ai_engine",
+      "name": "Executive AI",
+      "goal": "Generate daily plain-English fleet briefings with recommendations and reasoning.",
+      "currentStatus": "not_built",
+      "nextMilestones": [
+        "Create daily-briefing.json.",
+        "Create scripts/generate-daily-briefing.mjs.",
+        "Add concise briefing section to dashboard.",
+        "Add confidence and evidence to recommendations."
+      ]
+    }
+  ],
+  "definitionOfDone": [
+    "The app answers what to charge today.",
+    "The app ranks what vehicle to buy next.",
+    "The app identifies demand increases and decreases.",
+    "The app identifies which competitors are winning and why.",
+    "The app gives a prioritized daily action list.",
+    "The app rejects stale, missing, or low-confidence data instead of pretending to know.",
+    "The app stores historical observations instead of overwriting them."
+  ]
+}
