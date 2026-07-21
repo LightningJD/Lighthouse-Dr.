@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-20T19:49:40.398Z",
+  "generatedAt": "2026-07-21T03:21:02.962Z",
   "sourceLastUpdated": "2026-06-18T06:14:00-07:00",
   "marketAnalysis": {
     "segment": "Tesla Model 3 Las Vegas",
@@ -35,7 +35,7 @@
     },
     "snapshot": {
       "status": "ok",
-      "generatedAt": "2026-07-20T19:49:40.163Z",
+      "generatedAt": "2026-07-21T03:21:02.639Z",
       "ageHours": 0,
       "segmentId": "tesla_model_3_las_vegas",
       "segmentLabel": "Tesla Model 3 Las Vegas",
@@ -45,8 +45,8 @@
       "collector": {
         "mode": "semi_automated_public_research_import",
         "status": "ok",
-        "startedAt": "2026-07-20T19:49:40.163Z",
-        "finishedAt": "2026-07-20T19:49:40.163Z",
+        "startedAt": "2026-07-21T03:21:02.639Z",
+        "finishedAt": "2026-07-21T03:21:02.639Z",
         "durationSeconds": 0,
         "totalListings": 5,
         "successfulListings": 5,
@@ -120,8 +120,40 @@
   },
   "eventAnalysis": {
     "market": "Las Vegas, NV",
-    "next45Days": [],
-    "highestDemandEvent": null
+    "next45Days": [
+      {
+        "id": "labor-day-2026",
+        "name": "Labor Day Weekend",
+        "startsOn": "2026-09-04",
+        "endsOn": "2026-09-08",
+        "demandScore": 8,
+        "recommendedMultiplier": 1.25,
+        "segments": [
+          "ev_sedan",
+          "midsize_suv",
+          "premium",
+          "family"
+        ],
+        "notes": "Strong travel weekend. Watch airport delivery demand.",
+        "daysUntil": 45
+      }
+    ],
+    "highestDemandEvent": {
+      "id": "labor-day-2026",
+      "name": "Labor Day Weekend",
+      "startsOn": "2026-09-04",
+      "endsOn": "2026-09-08",
+      "demandScore": 8,
+      "recommendedMultiplier": 1.25,
+      "segments": [
+        "ev_sedan",
+        "midsize_suv",
+        "premium",
+        "family"
+      ],
+      "notes": "Strong travel weekend. Watch airport delivery demand.",
+      "daysUntil": 45
+    }
   },
   "actionPlan": [
     {
@@ -142,7 +174,7 @@
       "title": "Raise/test weekend Tesla Model 3 price to $61 for the next 2 weekends.",
       "body": "Current weekend price $56 vs market median $64.",
       "status": "open",
-      "generatedAt": "2026-07-20T19:49:40.398Z"
+      "generatedAt": "2026-07-21T03:21:02.962Z"
     },
     {
       "id": "alert-2",
@@ -150,7 +182,7 @@
       "title": "Finish 2022 Hyundai Santa Fe listing.",
       "body": "Needs photos & listing completion",
       "status": "open",
-      "generatedAt": "2026-07-20T19:49:40.398Z"
+      "generatedAt": "2026-07-21T03:21:02.962Z"
     }
   ],
   "dashboardStatus": {
@@ -170,7 +202,7 @@
   ],
   "marketSnapshot": {
     "status": "ok",
-    "generatedAt": "2026-07-20T19:49:40.163Z",
+    "generatedAt": "2026-07-21T03:21:02.639Z",
     "ageHours": 0,
     "segmentId": "tesla_model_3_las_vegas",
     "segmentLabel": "Tesla Model 3 Las Vegas",
@@ -180,8 +212,8 @@
     "collector": {
       "mode": "semi_automated_public_research_import",
       "status": "ok",
-      "startedAt": "2026-07-20T19:49:40.163Z",
-      "finishedAt": "2026-07-20T19:49:40.163Z",
+      "startedAt": "2026-07-21T03:21:02.639Z",
+      "finishedAt": "2026-07-21T03:21:02.639Z",
       "durationSeconds": 0,
       "totalListings": 5,
       "successfulListings": 5,
