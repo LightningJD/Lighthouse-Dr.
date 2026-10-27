@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T22:30:48.019Z",
+  "generatedAt": "2026-10-27T04:31:47.954Z",
   "sourceLastUpdated": "2026-06-18T06:14:00-07:00",
   "marketAnalysis": {
     "segment": "Tesla Model 3 Las Vegas",
@@ -36,7 +36,7 @@
     },
     "snapshot": {
       "status": "ok",
-      "generatedAt": "2026-10-26T22:30:47.774Z",
+      "generatedAt": "2026-10-27T04:31:47.645Z",
       "ageHours": 0,
       "segmentId": "tesla_model_3_las_vegas",
       "segmentLabel": "Tesla Model 3 Las Vegas",
@@ -46,8 +46,8 @@
       "collector": {
         "mode": "semi_automated_public_research_import",
         "status": "ok",
-        "startedAt": "2026-10-26T22:30:47.774Z",
-        "finishedAt": "2026-10-26T22:30:47.774Z",
+        "startedAt": "2026-10-27T04:31:47.645Z",
+        "finishedAt": "2026-10-27T04:31:47.645Z",
         "durationSeconds": 0,
         "totalListings": 5,
         "successfulListings": 5,
@@ -136,7 +136,7 @@
           "premium"
         ],
         "notes": "Automotive-heavy demand. Trucks, EVs, premium cars may outperform.",
-        "daysUntil": 8
+        "daysUntil": 7
       },
       {
         "id": "thanksgiving-2026",
@@ -151,7 +151,7 @@
           "ev_sedan"
         ],
         "notes": "Family travel week. SUVs should be prioritized.",
-        "daysUntil": 29
+        "daysUntil": 28
       }
     ],
     "highestDemandEvent": {
@@ -168,7 +168,7 @@
         "premium"
       ],
       "notes": "Automotive-heavy demand. Trucks, EVs, premium cars may outperform.",
-      "daysUntil": 8
+      "daysUntil": 7
     }
   },
   "actionPlan": [
@@ -185,7 +185,7 @@
     {
       "priority": "high",
       "action": "Prepare event pricing for SEMA Show.",
-      "reason": "SEMA Show starts in 8 day(s), demand score 9/10, suggested multiplier 1.35x."
+      "reason": "SEMA Show starts in 7 day(s), demand score 9/10, suggested multiplier 1.35x."
     },
     {
       "priority": "high",
@@ -200,7 +200,7 @@
       "title": "Raise/test weekend Tesla Model 3 price to $82 for the next 2 weekends.",
       "body": "Current weekend price $56 vs market median $64.",
       "status": "open",
-      "generatedAt": "2026-10-26T22:30:48.019Z"
+      "generatedAt": "2026-10-27T04:31:47.954Z"
     },
     {
       "id": "alert-2",
@@ -208,15 +208,15 @@
       "title": "Test weekday Tesla Model 3 price at $63.",
       "body": "Current weekday price $55 vs market median $53.",
       "status": "open",
-      "generatedAt": "2026-10-26T22:30:48.019Z"
+      "generatedAt": "2026-10-27T04:31:47.954Z"
     },
     {
       "id": "alert-3",
       "priority": "high",
       "title": "Prepare event pricing for SEMA Show.",
-      "body": "SEMA Show starts in 8 day(s), demand score 9/10, suggested multiplier 1.35x.",
+      "body": "SEMA Show starts in 7 day(s), demand score 9/10, suggested multiplier 1.35x.",
       "status": "open",
-      "generatedAt": "2026-10-26T22:30:48.019Z"
+      "generatedAt": "2026-10-27T04:31:47.954Z"
     },
     {
       "id": "alert-4",
@@ -224,7 +224,7 @@
       "title": "Finish 2022 Hyundai Santa Fe listing.",
       "body": "Needs photos & listing completion",
       "status": "open",
-      "generatedAt": "2026-10-26T22:30:48.019Z"
+      "generatedAt": "2026-10-27T04:31:47.954Z"
     }
   ],
   "dashboardStatus": {
@@ -244,7 +244,7 @@
   ],
   "marketSnapshot": {
     "status": "ok",
-    "generatedAt": "2026-10-26T22:30:47.774Z",
+    "generatedAt": "2026-10-27T04:31:47.645Z",
     "ageHours": 0,
     "segmentId": "tesla_model_3_las_vegas",
     "segmentLabel": "Tesla Model 3 Las Vegas",
@@ -254,8 +254,8 @@
     "collector": {
       "mode": "semi_automated_public_research_import",
       "status": "ok",
-      "startedAt": "2026-10-26T22:30:47.774Z",
-      "finishedAt": "2026-10-26T22:30:47.774Z",
+      "startedAt": "2026-10-27T04:31:47.645Z",
+      "finishedAt": "2026-10-27T04:31:47.645Z",
       "durationSeconds": 0,
       "totalListings": 5,
       "successfulListings": 5,
